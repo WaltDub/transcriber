@@ -42,11 +42,12 @@ jobs:
           mkdir -p models
           wget -O models/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
 
-      - name: Download SnakModel (Danish LLM)
+      - name: Download Llama 2 7B Chat GGUF
         run: |
           mkdir -p models
-          wget -O models/snakmodel-7b-q4_k_m.gguf \
-          https://huggingface.co/nlpnorth/snakmodel-7b-gguf/resolve/main/snakmodel-7b.Q4_K_M.gguf
+          wget -O models/llama-2-7b-chat.Q4_K_M.gguf \
+          https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf
+
 
       - name: Install Python packages
         run: |
