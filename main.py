@@ -11,6 +11,9 @@ BASE_URL = os.environ["APPSCRIPT_URL"]
 WHISPER_BIN = Path("./whisper.cpp/build/bin/whisper")
 WHISPER_MODEL = Path("./models/ggml-base.en.bin")
 
+print("WHISPER_BIN =", WHISPER_BIN)
+print("WHISPER_BIN exists:", WHISPER_BIN.exists())
+
 LLAMA_BIN = Path("./llama.cpp/build/bin/llama")
 LLAMA_MODEL = Path("./models/snakmodel-7b-q4_k_m.gguf")
 
