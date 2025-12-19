@@ -1,0 +1,51 @@
+name: Meeting Transcriber
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour
+  workflow_dispatch:
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-latest
+
+    env:
+      API_SECRET: ${{ secrets.API_SECRET }}
+      APPSCRIPT_URL: ${{ secrets.APPSCRIPT_URL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3 python3-pip wget unzip
+
+      - name: Build whisper.cpp
+        run: |
+          cd whisper.cpp
+          make
+
+      - name: Build llama.cpp
+        run: |
+          cd llama.cpp
+          make
+
+      - name: Download Whisper model
+        run: |
+          mkdir -p models
+          wget -O models/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+
+      - name: Download Llama model
+        run: |
+          mkdir -p models
+          wget -O models/llama-3.1-8b.gguf https://huggingface.co/your-model-source/resolve/main/llama-3.1-8b.gguf
+
+      - name: Install Python packages
+        run: |
+          pip3 install requests
+
+      - name: Run worker
+        run: |
+          python3 main.py
