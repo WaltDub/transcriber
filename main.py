@@ -11,7 +11,7 @@ BASE_URL = os.environ["APPSCRIPT_URL"]
 WHISPER_BIN = Path("./whisper.cpp/main")
 WHISPER_MODEL = Path("./models/ggml-base.en.bin")
 
-LLAMA_BIN = Path("./llama.cpp/main")
+LLAMA_BIN = Path("./llama.cpp/build/bin/llama")
 LLAMA_MODEL = Path("./models/llama-3.1-8b.gguf")
 
 DOWNLOAD_DIR = Path("./downloads")
