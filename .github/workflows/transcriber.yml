@@ -28,13 +28,13 @@ jobs:
         run: |
           cd whisper.cpp
           make
-
+          
       - name: Build llama.cpp
         run: |
           cd llama.cpp
           mkdir -p build
           cd build
-          cmake ..
+          cmake .. -DLLAMA_CURL=OFF
           cmake --build . --config Release
 
       - name: Download Whisper model
