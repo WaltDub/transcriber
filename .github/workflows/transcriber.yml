@@ -32,8 +32,11 @@ jobs:
       - name: Build llama.cpp
         run: |
           cd llama.cpp
-          make
-
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build . --config Release
+          
       - name: Download Whisper model
         run: |
           mkdir -p models
