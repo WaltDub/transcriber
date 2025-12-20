@@ -8,7 +8,7 @@ from textwrap import shorten
 API_SECRET = os.environ["API_SECRET"]
 BASE_URL = os.environ["APPSCRIPT_URL"]
 
-WHISPER_BIN = Path("./whisper.cpp/build/bin/main")
+WHISPER_BIN = (Path(__file__).parent / "whisper.cpp/build/bin/main").resolve()
 WHISPER_MODEL = Path("./models/ggml-base.en.bin")
 
 LLAMA_BIN = Path("./llama.cpp/build/bin/llama")
