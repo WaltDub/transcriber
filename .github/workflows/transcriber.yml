@@ -31,7 +31,10 @@ jobs:
         run: |
           cd whisper.cpp
           make
-          
+
+      - name: List whisper build output
+        run: ls -R whisper.cpp/build/bin
+     
       - name: Build llama.cpp
         run: |
           cd llama.cpp
