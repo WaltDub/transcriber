@@ -69,11 +69,9 @@ jobs:
           cmake .. -DLLAMA_CURL=OFF -DBUILD_LLAMA_CLI=ON
           cmake --build . --config Release
 
-      - name: List llama build output
-        run: ls -R llama.cpp/build/bin
-        
-      - name: Show llama-run help
-        run: llama.cpp/build/bin/llama-run --help || true
+      - name: Show llama-cli help
+        run: llama.cpp/build/bin/llama-cli --help || true
+
 
 
       # Download Whisper model only if cache missed
