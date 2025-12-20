@@ -8,14 +8,17 @@ from textwrap import shorten
 API_SECRET = os.environ["API_SECRET"]
 BASE_URL = os.environ["APPSCRIPT_URL"]
 
-WHISPER_BIN = (Path(__file__).parent / "whisper.cpp/build/bin/whisper-cli").resolve()
-WHISPER_MODEL = Path("./models/ggml-base.en.bin")
+BASE_DIR = Path(__file__).parent.resolve()
 
-LLAMA_BIN = (Path(__file__).parent / "llama.cpp/build/bin/llama").resolve()
-LLAMA_MODEL = Path("./models/snakmodel-7b-q4_k_m.gguf")
+WHISPER_BIN = (BASE_DIR / "whisper.cpp/build/bin/whisper-cli").resolve()
+WHISPER_MODEL = (BASE_DIR / "models/ggml-base.en.bin").resolve()
 
-DOWNLOAD_DIR = Path("./downloads")
+LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama").resolve()
+LLAMA_MODEL = (BASE_DIR / "models/snakmodel-7b-q4_k_m.gguf").resolve()
+
+DOWNLOAD_DIR = (BASE_DIR / "downloads")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
+
 
 
 def get_next_job():
