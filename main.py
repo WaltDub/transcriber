@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).parent.resolve()
 WHISPER_BIN = (BASE_DIR / "whisper.cpp/build/bin/whisper-cli").resolve()
 WHISPER_MODEL = (BASE_DIR / "models/ggml-base.en.bin").resolve()
 
-LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama").resolve()
+LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama-cli").resolve()
 LLAMA_MODEL = (BASE_DIR / "models/snakmodel-7b-q4_k_m.gguf").resolve()
 
 DOWNLOAD_DIR = (BASE_DIR / "downloads")
