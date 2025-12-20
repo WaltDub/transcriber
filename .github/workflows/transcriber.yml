@@ -19,20 +19,58 @@ jobs:
         with:
           submodules: recursive
 
+      # ---------------------------------------------------------
+      # Cache Whisper build
+      # ---------------------------------------------------------
+      - name: Cache whisper.cpp build
+        uses: actions/cache@v3
+        with:
+          path: whisper.cpp/build
+          key: whisper-build-${{ hashFiles('whisper.cpp/**') }}
+
+      # ---------------------------------------------------------
+      # Cache Llama build
+      # ---------------------------------------------------------
+      - name: Cache llama.cpp build
+        uses: actions/cache@v3
+        with:
+          path: llama.cpp/build
+          key: llama-build-${{ hashFiles('llama.cpp/**') }}
+
+      # ---------------------------------------------------------
+      # Cache models
+      # ---------------------------------------------------------
+      - name: Cache models
+        uses: actions/cache@v3
+        with:
+          path: models
+          key: models-cache-v1
+
+      # ---------------------------------------------------------
+      # Install system dependencies
+      # ---------------------------------------------------------
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake python3 python3-pip wget unzip
 
+      # ---------------------------------------------------------
+      # Build Whisper.cpp only if cache was not restored
+      # ---------------------------------------------------------
       - name: Build whisper.cpp
+        if: steps.cache-whisper.outputs.cache-hit != 'true'
         run: |
           cd whisper.cpp
           make
 
       - name: List whisper build output
         run: ls -R whisper.cpp/build/bin
-     
+
+      # ---------------------------------------------------------
+      # Build Llama.cpp only if cache was not restored
+      # ---------------------------------------------------------
       - name: Build llama.cpp
+        if: steps.cache-llama.outputs.cache-hit != 'true'
         run: |
           cd llama.cpp
           mkdir -p build
@@ -40,22 +78,41 @@ jobs:
           cmake .. -DLLAMA_CURL=OFF
           cmake --build . --config Release
 
+      # ---------------------------------------------------------
+      # Download Whisper model only if missing
+      # ---------------------------------------------------------
       - name: Download Whisper model
+        if: steps.cache-models.outputs.cache-hit != 'true'
         run: |
           mkdir -p models
-          wget -O models/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+          wget -O models/ggml-base.en.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
 
+      # ---------------------------------------------------------
+      # Download Llama model only if missing
+      # ---------------------------------------------------------
       - name: Download Llama 2 7B Chat GGUF
+        if: steps.cache-models.outputs.cache-hit != 'true'
         run: |
           mkdir -p models
           wget -O models/llama-2-7b-chat.Q4_K_M.gguf \
-          https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf
+            https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf
 
+      # ---------------------------------------------------------
+      # Cache Python dependencies
+      # ---------------------------------------------------------
+      - name: Cache pip
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: pip-cache-v1
 
       - name: Install Python packages
         run: |
           pip3 install requests
 
+      # ---------------------------------------------------------
+      # Run worker
+      # ---------------------------------------------------------
       - name: Run worker
-        run: |
-          python3 main.py
+        run: python3 main.py
