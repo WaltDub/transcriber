@@ -13,7 +13,7 @@ BASE_DIR = Path(__file__).parent.resolve()
 WHISPER_BIN = (BASE_DIR / "whisper.cpp/build/bin/whisper-cli").resolve()
 WHISPER_MODEL = (BASE_DIR / "models/ggml-base.en.bin").resolve()
 
-LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama-run").resolve()
+LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama-cli").resolve()
 LLAMA_MODEL = (BASE_DIR / "models/llama-2-7b-chat.Q4_K_M.gguf").resolve()
 
 DOWNLOAD_DIR = (BASE_DIR / "downloads")
@@ -104,13 +104,11 @@ def summarize_with_llama(transcript: str) -> str:
         "-p", prompt,
         "-n", "512",
         "--temp", "0.7",
-        "--top-k", "40",
-        "--top-p", "0.95",
-        "--repeat-penalty", "1.1",
-        "--ctx-size", "4096",
         "--threads", "4",
-        "--batch-size", "512"
+        "--context-size", "4096"
     ]
+
+    print("LLAMA COMMAND:", " ".join(cmd))
 
     try:
         result = subprocess.run(
@@ -126,8 +124,6 @@ def summarize_with_llama(transcript: str) -> str:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
     return result.stdout.strip()
-
-
 
 
 
