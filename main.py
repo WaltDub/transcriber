@@ -58,14 +58,13 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     cmd = [
         str(WHISPER_BIN),
         "-m", str(WHISPER_MODEL),
-        "-f", str(audio_path),
+        str(audio_path.resolve()),
         "-l", "en",
         "-otxt"
     ]
 
     result = subprocess.run(
         cmd,
-        cwd=audio_path.parent,
         capture_output=True,
         text=True
     )
@@ -78,6 +77,8 @@ def transcribe_with_whisper(audio_path: Path) -> str:
         return result.stdout.strip()
 
     return txt_path.read_text(encoding="utf-8", errors="ignore").strip()
+
+
 
 
 def summarize_with_llama(transcript: str) -> str:
