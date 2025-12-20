@@ -71,6 +71,10 @@ jobs:
 
       - name: List llama build output
         run: ls -R llama.cpp/build/bin
+        
+      - name: Show llama-run help
+        run: llama.cpp/build/bin/llama-run --help || true
+
 
       # Download Whisper model only if cache missed
       - name: Download Whisper model
