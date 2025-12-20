@@ -103,9 +103,13 @@ def summarize_with_llama(transcript: str) -> str:
         "-m", str(LLAMA_MODEL),
         "-p", prompt,
         "-n", "512",
+        "-c", "4096",
+        "-t", "4",
+        "-b", "512",
         "--temp", "0.7",
-        "--threads", "4",
-        "--context-size", "4096"
+        "--top-k", "40",
+        "--top-p", "0.95",
+        "--repeat-penalty", "1.1"
     ]
 
     print("LLAMA COMMAND:", " ".join(cmd))
@@ -124,6 +128,7 @@ def summarize_with_llama(transcript: str) -> str:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
     return result.stdout.strip()
+
 
 
 
