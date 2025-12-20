@@ -82,11 +82,10 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     return txt_path.read_text(encoding="utf-8", errors="ignore").strip()
 
 
-
-
 def summarize_with_llama(transcript: str) -> str:
     print("  → Summarizing transcript with llama.cpp")
 
+    # Llama.cpp can hang on very large prompts without explicit limits.
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
 
     prompt = (
@@ -103,21 +102,46 @@ def summarize_with_llama(transcript: str) -> str:
     cmd = [
         str(LLAMA_BIN),
         "-m", str(LLAMA_MODEL),
-        "-p", prompt,
+
+        # Non-interactive, safe, deterministic
+        "--no-interactive",
+        "--silent-prompt",
+
+        # Performance tuning for GitHub Actions CPU runners
+        "--threads", "4",
+        "--batch-size", "512",
+        "--ctx-size", "4096",
+
+        # Sampling parameters
+        "--temp", "0.7",
+        "--top-k", "40",
+        "--top-p", "0.95",
+        "--repeat-penalty", "1.1",
+
+        # Output length
         "-n", "512",
-        "--temp", "0.7"
+
+        # The actual prompt
+        "-p", prompt
     ]
 
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=True,
+            text=True,
+            timeout=600  # 10 minutes hard timeout
+        )
+    except subprocess.TimeoutExpired:
+        raise RuntimeError("Llama summarization timed out after 10 minutes")
 
     if result.returncode != 0:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
     return result.stdout.strip()
+
+
+
 
 
 def submit_results(row: int, transcript: str, summary: str):
