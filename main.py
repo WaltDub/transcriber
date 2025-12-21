@@ -44,15 +44,29 @@ def download_audio(drive_url: str, row: int) -> Path:
     file_id = extract_drive_file_id(drive_url)
     download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
 
-    out_path = DOWNLOAD_DIR / f"meeting_{row}.wav"
+    # Save the raw download with its original extension
+    raw_path = DOWNLOAD_DIR / f"meeting_{row}.raw"
     print(f"  → Downloading audio for row {row}")
     r = requests.get(download_url, timeout=300)
     r.raise_for_status()
 
-    with open(out_path, "wb") as f:
+    with open(raw_path, "wb") as f:
         f.write(r.content)
 
-    return out_path
+    # Convert to 16kHz mono PCM WAV for whisper.cpp
+    wav_path = DOWNLOAD_DIR / f"meeting_{row}.wav"
+    cmd = [
+        "ffmpeg",
+        "-y",                # overwrite if exists
+        "-i", str(raw_path),
+        "-ar", "16000",      # sample rate 16 kHz
+        "-ac", "1",          # mono
+        "-c:a", "pcm_s16le", # 16‑bit PCM
+        str(wav_path)
+    ]
+    subprocess.run(cmd, check=True)
+
+    return wav_path
 
 
 def transcribe_with_whisper(audio_path: Path) -> str:
