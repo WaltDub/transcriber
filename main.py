@@ -82,11 +82,63 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     return txt_path.read_text(encoding="utf-8", errors="ignore").strip()
 
 
+import re
+import subprocess
+from textwrap import shorten
+
+def clean_llama_output(raw: str) -> str:
+    """
+    Cleans the raw output from llama-cli by removing:
+    - ANSI escape codes
+    - spinner characters
+    - backspaces and erased characters
+    - carriage returns
+    - 'Loading model...' noise
+    - prompt echo (optional)
+    """
+
+    # Remove ANSI escape sequences (colors, cursor moves, etc.)
+    raw = re.sub(r'\x1b
+
+\[[0-9;]*[A-Za-z]', '', raw)
+
+    # Remove backspaces and the characters they erase
+    raw = re.sub(r'.\x08', '', raw)
+
+    # Remove carriage returns
+    raw = raw.replace('\r', '')
+
+    # Remove spinner characters (| / - \)
+    raw = re.sub(r'[|/\\\-]', '', raw)
+
+    # Remove "Loading model..." lines
+    raw = re.sub(r'Loading model.*', '', raw)
+
+    # Remove repeated spaces
+    raw = re.sub(r' +', ' ', raw)
+
+    # Strip leading/trailing whitespace
+    cleaned = raw.strip()
+
+    return cleaned
+
+
 def summarize_with_llama(transcript: str) -> str:
+    """
+    Runs llama-cli in non-conversation mode to generate a clean summary.
+    Ensures:
+    - No chat mode
+    - No prompt echo in final output
+    - No spinner or control characters
+    - Timeout protection
+    """
+
     print("  → Summarizing transcript with llama.cpp")
 
+    # Keep transcript manageable for context window
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
 
+    # The actual prompt we want the model to complete
     prompt = (
         "You are an assistant that writes clear meeting summaries.\n\n"
         "Given the following meeting transcript, provide:\n"
@@ -98,37 +150,47 @@ def summarize_with_llama(transcript: str) -> str:
         "Now provide the summary and lists in plain text:\n"
     )
 
+    # llama-cli command using ONLY flags supported by your version
     cmd = [
         str(LLAMA_BIN),
         "-m", str(LLAMA_MODEL),
         "-p", prompt,
-        "-n", "512",
-        "-c", "4096",
-        "-t", "4",
-        "-b", "512",
+        "-n", "512",          # max tokens to generate
+        "-c", "4096",         # context size
+        "-t", "4",            # threads
+        "-b", "512",          # batch size
         "--temp", "0.7",
         "--top-k", "40",
         "--top-p", "0.95",
         "--repeat-penalty", "1.1",
-        "--single-turn"
+        "--no-conversation"   # CRITICAL: disable chat mode so it doesn't wait for input
     ]
 
     print("LLAMA COMMAND:", " ".join(cmd))
 
     try:
+        # Run llama-cli with timeout protection
         result = subprocess.run(
             cmd,
             capture_output=True,
             text=True,
-            timeout=600
+            timeout=600  # 10 minutes
         )
     except subprocess.TimeoutExpired:
         raise RuntimeError("Llama summarization timed out after 10 minutes")
 
+    # If llama-cli itself failed
     if result.returncode != 0:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
-    return result.stdout.strip()
+    # Clean the raw output
+    cleaned = clean_llama_output(result.stdout)
+
+    # Remove the prompt echo if llama-cli printed it
+    if prompt in cleaned:
+        cleaned = cleaned.replace(prompt, "").strip()
+
+    return cleaned
 
 
 
