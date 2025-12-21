@@ -154,16 +154,18 @@ def summarize_with_llama(transcript: str) -> str:
         str(LLAMA_BIN),
         "-m", str(LLAMA_MODEL),
         "-p", prompt,
-        "-n", "512",          # max tokens to generate
-        "-c", "4096",         # context size
-        "-t", "4",            # threads
-        "-b", "512",          # batch size
+        "-n", "512",
+        "-c", "4096",
+        "-t", "4",
+        "-b", "512",
         "--temp", "0.7",
         "--top-k", "40",
         "--top-p", "0.95",
         "--repeat-penalty", "1.1",
-        "--no-conversation"   # CRITICAL: disable chat mode so it doesn't wait for input
+        "--no-conversation",
+        "--chat-template", "none"
     ]
+
 
     print("LLAMA COMMAND:", " ".join(cmd))
 
