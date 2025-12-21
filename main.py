@@ -62,7 +62,7 @@ def transcribe_with_whisper(audio_path: Path) -> str:
         str(WHISPER_BIN),
         "-m", str(WHISPER_MODEL),
         str(audio_path.resolve()),
-        "-l", "auto",
+        "-l", "auto",   # autodetect language
         "-otxt"
     ]
 
@@ -76,10 +76,16 @@ def transcribe_with_whisper(audio_path: Path) -> str:
         raise RuntimeError(f"Whisper failed: {result.stderr}")
 
     txt_path = audio_path.with_suffix(".txt")
-    if not txt_path.exists():
-        return result.stdout.strip()
+    if txt_path.exists():
+        transcript = txt_path.read_text(encoding="utf-8", errors="ignore").strip()
+    else:
+        transcript = result.stdout.strip()
 
-    return txt_path.read_text(encoding="utf-8", errors="ignore").strip()
+    # Debug: print transcript length and a preview
+    print("  → Transcript preview:", transcript[:200], "...")
+    print("  → Transcript length:", len(transcript))
+
+    return transcript
 
 
 import re
