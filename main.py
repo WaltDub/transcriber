@@ -75,17 +75,23 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     if result.returncode != 0:
         raise RuntimeError(f"Whisper failed: {result.stderr}")
 
-    txt_path = audio_path.with_suffix(".txt")
+    # Whisper writes <audio>.wav.txt by default
+    txt_path = Path(str(audio_path) + ".txt")
+
     if txt_path.exists():
         transcript = txt_path.read_text(encoding="utf-8", errors="ignore").strip()
     else:
+        # Fall back to stdout if no file was created
         transcript = result.stdout.strip()
 
-    # Debug: print transcript length and a preview
+    # Debug logging
+    print("  → Whisper stdout:", result.stdout[:200], "...")
+    print("  → Whisper stderr:", result.stderr.strip())
     print("  → Transcript preview:", transcript[:200], "...")
     print("  → Transcript length:", len(transcript))
 
     return transcript
+
 
 
 import re
