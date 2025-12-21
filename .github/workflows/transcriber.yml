@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: models
-          key: models-cache-v1
+          key: models-cache-v2
 
       # Install system dependencies
       - name: Install dependencies
