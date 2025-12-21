@@ -62,7 +62,7 @@ def transcribe_with_whisper(audio_path: Path) -> str:
         str(WHISPER_BIN),
         "-m", str(WHISPER_MODEL),
         str(audio_path.resolve()),
-        "-l", "en",
+        "-l", "auto",
         "-otxt"
     ]
 
