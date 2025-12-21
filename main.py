@@ -11,7 +11,7 @@ BASE_URL = os.environ["APPSCRIPT_URL"]
 BASE_DIR = Path(__file__).parent.resolve()
 
 WHISPER_BIN = (BASE_DIR / "whisper.cpp/build/bin/whisper-cli").resolve()
-WHISPER_MODEL = (BASE_DIR / "models/ggml-base.en.bin").resolve()
+WHISPER_MODEL = (BASE_DIR / "models/ggml-base.bin").resolve()
 
 LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama-cli").resolve()
 LLAMA_MODEL = (BASE_DIR / "models/llama-2-7b-chat.Q4_K_M.gguf").resolve()
