@@ -161,8 +161,7 @@ def summarize_with_llama(transcript: str) -> str:
         "--temp", "0.7",
         "--top-k", "40",
         "--top-p", "0.95",
-        "--repeat-penalty", "1.1",
-        "--no-conversation",          # instead of --no-conversation
+        "--repeat-penalty", "1.1",       
         "--no-jinja"                  # instead of --chat-template none
     ]
 
