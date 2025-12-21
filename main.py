@@ -98,9 +98,8 @@ def clean_llama_output(raw: str) -> str:
     """
 
     # Remove ANSI escape sequences (colors, cursor moves, etc.)
-    raw = re.sub(r'\x1b
-
-\[[0-9;]*[A-Za-z]', '', raw)
+    ansi_pattern = r"""\x1b\[[0-9;]*[A-Za-z]"""
+    raw = re.sub(ansi_pattern, '', raw)
 
     # Remove backspaces and the characters they erase
     raw = re.sub(r'.\x08', '', raw)
