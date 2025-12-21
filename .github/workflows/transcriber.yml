@@ -86,8 +86,8 @@ jobs:
         if: steps.cache-models.outputs.cache-hit != 'true'
         run: |
           mkdir -p models
-          wget -O models/ggml-base.en.bin \
-            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+          wget -O models/ggml-base.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin
 
       # Download Llama model only if cache missed
       - name: Download Llama 2 7B Chat GGUF
