@@ -40,17 +40,17 @@ def extract_drive_file_id(url: str) -> str:
     return parts[-2]
 
 
+import gdown
+import subprocess
+from pathlib import Path
+
 def download_audio(drive_url: str, row: int) -> Path:
     file_id = extract_drive_file_id(drive_url)
-    download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
 
+    # Save the raw download with a temporary name
     raw_path = DOWNLOAD_DIR / f"meeting_{row}.input"
-    print(f"  → Downloading audio for row {row}")
-    r = requests.get(download_url, timeout=300)
-    r.raise_for_status()
-
-    with open(raw_path, "wb") as f:
-        f.write(r.content)
+    print(f"  → Downloading audio for row {row} via gdown")
+    gdown.download(id=file_id, output=str(raw_path), quiet=False)
 
     # Probe the file with ffmpeg to log its format
     print("  → Probing audio format with ffmpeg")
