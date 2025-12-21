@@ -105,7 +105,7 @@ jobs:
           key: pip-cache-v1
 
       - name: Install Python packages
-        run: pip3 install requests
+        run: pip3 install requests gdown
 
       - name: Run worker
         run: python3 main.py
