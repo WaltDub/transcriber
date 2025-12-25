@@ -175,9 +175,9 @@ def summarize_with_llama(transcript: str) -> str:
     # The actual prompt we want the model to complete
     prompt = (
         "Du er en assistent, der skriver klare mødereferater.\n\n"
-        "Givet følgende mødetransskription, lav\n"
-        "et resumé.\n\n"
+        "Givet følgende mødetransskription, lav et resumé.\n\n"
         "Skriv resuméet udelukkende på dansk, uden oversættelser eller engelske forklaringer:\n"
+        f"{truncated}\n"
     )
 
 
