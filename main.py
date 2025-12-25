@@ -176,10 +176,10 @@ def summarize_with_llama(transcript: str) -> str:
     prompt = (
         "Du er en assistent, der skriver klare mødereferater.\n\n"
         "Givet følgende mødetransskription, lav et resumé.\n\n"
-        "Skriv resuméet udelukkende på dansk, uden oversættelser eller engelske forklaringer:\n"
-        f"{truncated}\n"
+        f"Transskription:\n{truncated}\n\n"
+        "Resumé (skriv kun på dansk, uden engelske ord eller oversættelser):\n"
     )
-
+ 
 
     # llama-cli command using ONLY flags supported by your version
     cmd = [
