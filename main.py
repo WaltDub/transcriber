@@ -175,14 +175,11 @@ def summarize_with_llama(transcript: str) -> str:
     # The actual prompt we want the model to complete
     prompt = (
         "Du er en assistent, der skriver klare mødereferater.\n\n"
-        "Givet følgende mødetransskription, lav:\n"
-        "1. Et kort resumé (5–10 sætninger)\n"
-        "2. En punktliste over nøglebeslutninger\n"
-        "3. En punktliste over opgaver med ansvarlige, hvis nævnt\n\n"
-        "Transskription:\n"
-        f"{truncated}\n\n"
-        "Lever nu resuméet og listerne på dansk i almindelig tekst:\n"
+        "Givet følgende mødetransskription, lav\n"
+        "et resumé.\n\n"
+        "Skriv resuméet udelukkende på dansk, uden oversættelser eller engelske forklaringer:\n"
     )
+
 
     # llama-cli command using ONLY flags supported by your version
     cmd = [
