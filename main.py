@@ -85,7 +85,7 @@ def transcribe_with_whisper(audio_path: Path) -> str:
         str(WHISPER_BIN),
         "-m", str(WHISPER_MODEL),
         str(audio_path.resolve()),
-        "-l", "auto",   # autodetect language
+        "-l", "da",   # autodetect language
         "-otxt"
     ]
 
@@ -174,14 +174,14 @@ def summarize_with_llama(transcript: str) -> str:
 
     # The actual prompt we want the model to complete
     prompt = (
-        "You are an assistant that writes clear meeting summaries.\n\n"
-        "Given the following meeting transcript, provide:\n"
-        "1. A concise summary (5–10 sentences)\n"
-        "2. A bullet list of key decisions\n"
-        "3. A bullet list of action items with owners if mentioned\n\n"
-        "Transcript:\n"
+        "Du er en assistent, der skriver klare mødereferater.\n\n"
+        "Givet følgende mødetransskription, lav:\n"
+        "1. Et kort resumé (5–10 sætninger)\n"
+        "2. En punktliste over nøglebeslutninger\n"
+        "3. En punktliste over opgaver med ansvarlige, hvis nævnt\n\n"
+        "Transskription:\n"
         f"{truncated}\n\n"
-        "Now provide the summary and lists in plain text:\n"
+        "Lever nu resuméet og listerne på dansk i almindelig tekst:\n"
     )
 
     # llama-cli command using ONLY flags supported by your version
