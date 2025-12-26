@@ -35,13 +35,13 @@ jobs:
           path: llama.cpp/build
           key: llama-build-${{ hashFiles('llama.cpp/**') }}
 
-      # Cache models
+      # Cache models (both Whisper + LLM)
       - name: Cache models
         id: cache-models
         uses: actions/cache@v3
         with:
           path: models
-          key: models-cache-v2
+          key: models-cache-v3   # bumped to force fresh download
 
       # Install system dependencies
       - name: Install dependencies
@@ -79,8 +79,6 @@ jobs:
       - name: Show llama-cli help
         run: llama.cpp/build/bin/llama-cli --help || true
 
-
-
       # Download Whisper model only if cache missed
       - name: Download Whisper model
         if: steps.cache-models.outputs.cache-hit != 'true'
@@ -89,8 +87,9 @@ jobs:
           wget -O models/ggml-base.bin \
             https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin
 
+      # Download LLM model only if cache missed
       - name: Download LLM model
-        if: steps.cache-llm.outputs.cache-hit != 'true'
+        if: steps.cache-models.outputs.cache-hit != 'true'
         run: |
           mkdir -p models
           wget -O models/mistral-7b-instruct-v0.2.Q4_K_M.gguf \
@@ -98,7 +97,6 @@ jobs:
 
       - name: Verify LLM model
         run: ls -lh models && file models/mistral-7b-instruct-v0.2.Q4_K_M.gguf
-
 
       # Cache pip
       - name: Cache pip
