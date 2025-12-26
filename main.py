@@ -110,23 +110,11 @@ def clean_llama_output(raw: str, prompt: str) -> str:
     Simplified cleaning of llama-cli output.
     - Strips leading/trailing whitespace
     - Removes the prompt echo if present
-    - Drops obvious startup lines (banner, metadata)
     """
     text = raw.strip()
-
-    # Remove the prompt echo if llama-cli printed it
     if prompt in text:
         text = text.replace(prompt, "").strip()
-
-    # Remove any lines that are clearly metadata
-    cleaned_lines = []
-    for line in text.splitlines():
-        if line.startswith("build :") or line.startswith("model :") \
-           or line.startswith("modalities :") or line.startswith("available commands:"):
-            continue
-        cleaned_lines.append(line)
-
-    return "\n".join(cleaned_lines).strip()
+    return text
 
 
 def summarize_with_llama(transcript: str) -> str:
@@ -155,7 +143,8 @@ def summarize_with_llama(transcript: str) -> str:
         "--top-p", "0.95",
         "--repeat-penalty", "1.1",
         "--single-turn",
-        "--simple-io"   # suppresses banners and metadata
+        "--simple-io",          # suppresses banners and metadata
+        "--no-display-prompt"   # suppresses prompt echo
     ]
 
     print("LLAMA COMMAND:", " ".join(cmd))
