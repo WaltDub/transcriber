@@ -105,16 +105,28 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     return transcript
 
 
-def clean_llama_output(raw: str, prompt: str) -> str:
+def clean_llama_output(raw: str) -> str:
     """
-    Simplified cleaning of llama-cli output.
-    - Strips leading/trailing whitespace
-    - Removes the prompt echo if present
+    Extract only the summary text from llama-cli output.
+    - Cut everything up to and including '(truncated)'
+    - Cut everything from '[ Prompt:' onward
     """
-    text = raw.strip()
-    if prompt in text:
-        text = text.replace(prompt, "").strip()
-    return text
+    text = raw
+
+    # Step 1: cut before/including '(truncated)'
+    start_marker = "(truncated)"
+    if start_marker in text:
+        idx = text.find(start_marker)
+        text = text[idx + len(start_marker):]
+
+    # Step 2: cut after '[ Prompt:'
+    end_marker = "[ Prompt:"
+    if end_marker in text:
+        idx = text.find(end_marker)
+        text = text[:idx]
+
+    return text.strip()
+
 
 
 def summarize_with_llama(transcript: str) -> str:
