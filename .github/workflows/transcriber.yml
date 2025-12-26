@@ -89,20 +89,23 @@ jobs:
           wget -O models/ggml-base.bin \
             https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin
 
-      # Download Llama model only if cache missed
-      - name: Download Llama 2 7B Chat GGUF
-        if: steps.cache-models.outputs.cache-hit != 'true'
+      - name: Download LLM model
+        if: steps.cache-llm.outputs.cache-hit != 'true'
         run: |
           mkdir -p models
-          wget -O models/llama-2-7b-chat.Q4_K_M.gguf \
-            https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf
+          wget -O models/mistral-7b-instruct-v0.2.Q4_K_M.gguf \
+            https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.2-GGUF/resolve/main/mistral-7b-instruct-v0.2.Q4_K_M.gguf
+
+      - name: Verify LLM model
+        run: ls -lh models && file models/mistral-7b-instruct-v0.2.Q4_K_M.gguf
+
 
       # Cache pip
       - name: Cache pip
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: pip-cache-v1
+          key: pip-cache-v2
 
       - name: Install Python packages
         run: pip3 install requests gdown
