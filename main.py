@@ -14,7 +14,7 @@ WHISPER_BIN = (BASE_DIR / "whisper.cpp/build/bin/whisper-cli").resolve()
 WHISPER_MODEL = (BASE_DIR / "models/ggml-base.bin").resolve()
 
 LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama-cli").resolve()
-LLAMA_MODEL = (BASE_DIR / "mistral-7b-instruct-v0.2.Q4_K_M.gguf").resolve()
+LLAMA_MODEL = (BASE_DIR / "models/mistral-7b-instruct-v0.2.Q4_K_M.gguf").resolve()
 
 DOWNLOAD_DIR = (BASE_DIR / "downloads")
 DOWNLOAD_DIR.mkdir(exist_ok=True)
