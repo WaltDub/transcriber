@@ -105,7 +105,7 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     return transcript
 
 
-def clean_llama_output(raw: str) -> str:
+def clean_llama_output(raw: str, prompt: str) -> str:
     """
     Extract only the summary text from llama-cli output.
     - Cut everything up to and including '(truncated)'
