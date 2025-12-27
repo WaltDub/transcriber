@@ -108,16 +108,26 @@ def transcribe_with_whisper(audio_path: Path) -> str:
 def clean_llama_output(raw: str, prompt: str) -> str:
     """
     Extract only the summary text from llama-cli output.
-    - Cut everything up to and including '(truncated)'
+    - Cut everything up to and including '(truncated)' OR the 'Resumé...' line
     - Cut everything from '[ Prompt:' onward
+    - Remove prompt echo if present
     """
     text = raw
 
-    # Step 1: cut before/including '(truncated)'
-    start_marker = "(truncated)"
-    if start_marker in text:
-        idx = text.find(start_marker)
-        text = text[idx + len(start_marker):]
+    # Remove prompt echo if present
+    if prompt in text:
+        text = text.replace(prompt, "")
+
+    # Step 1: cut before/including '(truncated)' OR 'Resumé...'
+    start_marker1 = "(truncated)"
+    start_marker2 = "Resumé (skriv kun på dansk, uden engelske ord eller oversættelser):"
+
+    if start_marker1 in text:
+        idx = text.find(start_marker1)
+        text = text[idx + len(start_marker1):]
+    elif start_marker2 in text:
+        idx = text.find(start_marker2)
+        text = text[idx + len(start_marker2):]
 
     # Step 2: cut after '[ Prompt:'
     end_marker = "[ Prompt:"
