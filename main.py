@@ -122,6 +122,8 @@ def clean_llama_output(raw: str, prompt: str) -> str:
     - Remove prompt echo if present
     """
     text = raw
+    print(text, result.stdout[:500])
+
 
     # Remove prompt echo if present
     if prompt in text:
