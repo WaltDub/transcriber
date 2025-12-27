@@ -122,7 +122,7 @@ def clean_llama_output(raw: str, prompt: str) -> str:
     - Remove prompt echo if present
     """
     text = raw
-    print(text, result.stdout[:500])
+    print("RAW LLAMA OUTPUT PREVIEW:", text[:500])  # safe debug print
 
 
     # Remove prompt echo if present
