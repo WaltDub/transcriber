@@ -74,7 +74,7 @@ def download_audio(drive_url: str, row: int) -> Path:
 
 
 def transcribe_with_whisper(audio_path: Path) -> str:
-    """Run whisper.cpp to transcribe the audio file into text."""
+    """Run whisper.cpp to transcribe the audio file into text (file output only)."""
     print(f"Transcribing {audio_path.name} with whisper.cpp")
 
     cmd = [
@@ -99,27 +99,14 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     return transcript
 
 
-def clean_llama_output(raw: str, prompt: str) -> str:
-    """Remove prompt echo and metadata from llama-cli output."""
-    text = raw
-    if prompt in text:
-        text = text.replace(prompt, "")
-    if "[ Prompt:" in text:
-        text = text.split("[ Prompt:")[0]
-    return text.strip()
-
-
-def summarize_with_llama(transcript: str) -> str:
-    """Run llama.cpp to generate a Danish summary of the transcript."""
+def summarize_with_llama(transcript: str, row: int) -> str:
+    """Run llama.cpp to generate a Danish summary of the transcript (file output only)."""
     print("Summarizing transcript with llama.cpp")
 
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
+    prompt = f"Lav et kort og klart mødereferat på dansk.\n\nTransskription:\n{truncated}\n\nResumé:\n"
 
-    prompt = (
-        "Lav et kort og klart mødereferat på dansk.\n\n"
-        f"Transskription:\n{truncated}\n\n"
-        "Resumé:\n"
-    )
+    output_path = DOWNLOAD_DIR / f"meeting_{row}_summary.txt"
 
     cmd = [
         str(LLAMA_BIN),
@@ -127,15 +114,20 @@ def summarize_with_llama(transcript: str) -> str:
         "-p", prompt,
         "-n", "512",
         "-c", "4096",
-        "--single-turn"
+        "--single-turn",
+        "-of", str(output_path)
     ]
 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     if result.returncode != 0:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
-    cleaned = clean_llama_output(result.stdout, prompt)
-    return cleaned
+    if not output_path.exists() or output_path.stat().st_size == 0:
+        raise RuntimeError(f"Summary file missing or empty: {output_path}")
+
+    summary = output_path.read_text(encoding="utf-8", errors="ignore").strip()
+    print("Summary preview:", summary[:200], "...")
+    return summary
 
 
 def submit_results(row: int, transcript: str, summary: str):
@@ -163,7 +155,7 @@ def process_all_jobs():
         try:
             audio_path = download_audio(audio_url, row)
             transcript = transcribe_with_whisper(audio_path)
-            summary = summarize_with_llama(transcript)
+            summary = summarize_with_llama(transcript, row)
             submit_results(row, transcript, summary)
             print(f"Completed row {row}")
         except Exception as e:
@@ -174,3 +166,4 @@ def process_all_jobs():
 
 if __name__ == "__main__":
     process_all_jobs()
+
