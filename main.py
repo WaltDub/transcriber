@@ -82,12 +82,21 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     """Run whisper.cpp to transcribe the audio file into text."""
     print(f"Transcribing {audio_path.name} with whisper.cpp")
 
+    # Initial prompt to bias Whisper toward preserving English terms
+    initial_prompt = (
+        "Behold engelske artikelnavne, bogtitler, projektnavne og tekniske termer uændret. "
+        "Eksempler: Bayesian Inference, Deep Learning, Nature, Science, Perl, Conarro, Tsugu, "
+        "LExO, causality, Actor–network theory, exponential organizations, problem tree, "
+        "solution tree, problem solution tree."
+    )
+
     cmd = [
         str(WHISPER_BIN),
         "-m", str(WHISPER_MODEL),
         str(audio_path.resolve()),
         "-l", "da",   # specify Danish language
-        "-otxt"
+        "-otxt",
+        "--initial-prompt", initial_prompt
     ]
 
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -120,7 +129,7 @@ def clean_llama_output(raw: str, prompt: str) -> str:
 
     # Step 1: cut before/including '(truncated)' OR 'Resumé...'
     start_marker1 = "(truncated)"
-    start_marker2 = "Resumé (skriv kun på dansk, uden engelske ord eller oversættelser):"
+    start_marker2 = "Resumé (skriv kun på dansk, men behold engelske artikelnavne, bogtitler, projektnavne og tekniske termer uændret):"
 
     if start_marker1 in text:
         idx = text.find(start_marker1)
@@ -138,7 +147,6 @@ def clean_llama_output(raw: str, prompt: str) -> str:
     return text.strip()
 
 
-
 def summarize_with_llama(transcript: str) -> str:
     """Run llama.cpp to generate a Danish summary of the transcript."""
     print("Summarizing transcript with llama.cpp")
@@ -149,7 +157,9 @@ def summarize_with_llama(transcript: str) -> str:
         "Du er en assistent, der skriver klare mødereferater.\n\n"
         "Givet følgende mødetransskription, lav et resumé.\n\n"
         f"Transskription:\n{truncated}\n\n"
-        "Resumé (skriv kun på dansk, uden engelske ord eller oversættelser):\n"
+        "Resumé (skriv kun på dansk, men behold engelske artikelnavne, bogtitler, projektnavne og tekniske termer uændret. "
+        "Eksempler: Bayesian Inference, Deep Learning, Nature, Science, Perl, Conarro, Tsugu, LExO, causality, "
+        "Actor–network theory, exponential organizations, problem tree, solution tree, problem solution tree):\n"
     )
 
     cmd = [
