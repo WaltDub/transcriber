@@ -77,7 +77,6 @@ def download_audio(drive_url: str, row: int) -> Path:
     raw_path.unlink(missing_ok=True)
     return wav_path
 
-
 def transcribe_with_whisper(audio_path: Path) -> str:
     """Run whisper.cpp to transcribe the audio file into text."""
     print(f"Transcribing {audio_path.name} with whisper.cpp")
@@ -103,15 +102,18 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     if result.returncode != 0:
         raise RuntimeError(f"Whisper failed: {result.stderr}")
 
-    txt_path = Path(str(audio_path) + ".txt")
-    if txt_path.exists():
-        transcript = txt_path.read_text(encoding="utf-8", errors="ignore").strip()
-    else:
-        transcript = result.stdout.strip()
+    # Whisper writes e.g. meeting_2.txt (not meeting_2.wav.txt)
+    txt_path = audio_path.with_suffix(".txt")
+
+    if not txt_path.exists():
+        raise RuntimeError(f"Transcript file not found: {txt_path}")
+
+    transcript = txt_path.read_text(encoding="utf-8", errors="ignore").strip()
 
     print("Transcript preview:", transcript[:200], "...")
     print("Transcript length:", len(transcript))
     return transcript
+
 
 
 def clean_llama_output(raw: str, prompt: str) -> str:
