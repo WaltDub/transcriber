@@ -117,7 +117,7 @@ def transcribe_with_whisper(audio_path: Path) -> str:
 def clean_llama_output(raw: str, prompt: str) -> str:
     """
     Extract only the summary text from llama-cli output.
-    - Cut everything up to and including '(truncated)' OR the 'Resumé...' line
+    - Cut everything up to and including '(truncated)' OR any 'Resumé...' line
     - Cut everything from '[ Prompt:' onward
     - Remove prompt echo if present
     """
@@ -127,16 +127,24 @@ def clean_llama_output(raw: str, prompt: str) -> str:
     if prompt in text:
         text = text.replace(prompt, "")
 
-    # Step 1: cut before/including '(truncated)' OR 'Resumé...'
+    # Step 1: cut before/including '(truncated)' OR any 'Resumé...' marker
     start_marker1 = "(truncated)"
-    start_marker2 = "Resumé (skriv kun på dansk, men behold engelske artikelnavne, bogtitler, projektnavne og tekniske termer uændret):"
+    # Match only the stable prefix, not the full examples list
+    start_prefixes = [
+        "Resumé (skriv kun på dansk",
+        "Resumé (skriv kun på dansk,"
+    ]
 
     if start_marker1 in text:
         idx = text.find(start_marker1)
         text = text[idx + len(start_marker1):]
-    elif start_marker2 in text:
-        idx = text.find(start_marker2)
-        text = text[idx + len(start_marker2):]
+    else:
+        for prefix in start_prefixes:
+            if prefix in text:
+                idx = text.find(prefix)
+                # cut after the prefix line
+                text = text[idx + len(prefix):]
+                break
 
     # Step 2: cut after '[ Prompt:'
     end_marker = "[ Prompt:"
