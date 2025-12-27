@@ -56,11 +56,6 @@ def download_audio(drive_url: str, row: int) -> Path:
     print(f"Downloading audio for row {row} via gdown")
     gdown.download(id=file_id, output=str(raw_path), quiet=False)
 
-    # Probe the file with ffmpeg to log its format
-    probe_cmd = ["ffmpeg", "-i", str(raw_path)]
-    probe_result = subprocess.run(probe_cmd, capture_output=True, text=True)
-    print(probe_result.stderr.strip())
-
     # Convert to 16kHz mono PCM WAV for whisper.cpp
     wav_path = DOWNLOAD_DIR / f"meeting_{row}.wav"
     cmd = [
@@ -77,35 +72,25 @@ def download_audio(drive_url: str, row: int) -> Path:
     raw_path.unlink(missing_ok=True)
     return wav_path
 
-def transcribe_with_whisper(audio_path: Path) -> str:
-    print(f"Transcribing {audio_path.name} with whisper.cpp")
 
-    initial_prompt = (
-        "Behold engelske artikelnavne, bogtitler, projektnavne og tekniske termer uændret. "
-        "Eksempler: Bayesian Inference, Deep Learning, Nature, Science, Perl, Conarro, Tsugu, "
-        "LExO, causality, Actor–network theory, exponential organizations, problem tree, "
-        "solution tree, problem solution tree."
-    )
+def transcribe_with_whisper(audio_path: Path) -> str:
+    """Run whisper.cpp to transcribe the audio file into text."""
+    print(f"Transcribing {audio_path.name} with whisper.cpp")
 
     cmd = [
         str(WHISPER_BIN),
         "-m", str(WHISPER_MODEL),
         str(audio_path.resolve()),
         "-l", "da",
-        "-otxt",
-        "--initial-prompt", initial_prompt
+        "-otxt"
     ]
 
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
         raise RuntimeError(f"Whisper failed: {result.stderr}")
 
-    # Whisper writes meeting_2.wav.txt
-    txt_path = Path(str(audio_path) + ".txt")
-
+    txt_path = Path(str(audio_path) + ".txt")  # meeting_X.wav.txt
     if not txt_path.exists() or txt_path.stat().st_size == 0:
-        print("Whisper stdout preview:", result.stdout[:300])
-        print("Whisper stderr preview:", result.stderr[:300])
         raise RuntimeError(f"Transcript file missing or empty: {txt_path}")
 
     transcript = txt_path.read_text(encoding="utf-8", errors="ignore").strip()
@@ -114,47 +99,13 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     return transcript
 
 
-
 def clean_llama_output(raw: str, prompt: str) -> str:
-    """
-    Extract only the summary text from llama-cli output.
-    - Cut everything up to and including '(truncated)' OR any 'Resumé...' line
-    - Cut everything from '[ Prompt:' onward
-    - Remove prompt echo if present
-    """
+    """Remove prompt echo and metadata from llama-cli output."""
     text = raw
-    print("RAW LLAMA OUTPUT PREVIEW:", text[:500])  # safe debug print
-
-
-    # Remove prompt echo if present
     if prompt in text:
         text = text.replace(prompt, "")
-
-    # Step 1: cut before/including '(truncated)' OR any 'Resumé...' marker
-    start_marker1 = "(truncated)"
-    # Match only the stable prefix, not the full examples list
-    start_prefixes = [
-        "Resumé (skriv kun på dansk",
-        "Resumé (skriv kun på dansk,"
-    ]
-
-    if start_marker1 in text:
-        idx = text.find(start_marker1)
-        text = text[idx + len(start_marker1):]
-    else:
-        for prefix in start_prefixes:
-            if prefix in text:
-                idx = text.find(prefix)
-                # cut after the prefix line
-                text = text[idx + len(prefix):]
-                break
-
-    # Step 2: cut after '[ Prompt:'
-    end_marker = "[ Prompt:"
-    if end_marker in text:
-        idx = text.find(end_marker)
-        text = text[:idx]
-
+    if "[ Prompt:" in text:
+        text = text.split("[ Prompt:")[0]
     return text.strip()
 
 
@@ -165,12 +116,9 @@ def summarize_with_llama(transcript: str) -> str:
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
 
     prompt = (
-        "Du er en assistent, der skriver klare mødereferater.\n\n"
-        "Givet følgende mødetransskription, lav et resumé.\n\n"
+        "Lav et kort og klart mødereferat på dansk.\n\n"
         f"Transskription:\n{truncated}\n\n"
-        "Resumé (skriv kun på dansk, men behold engelske artikelnavne, bogtitler, projektnavne og tekniske termer uændret. "
-        "Eksempler: Bayesian Inference, Deep Learning, Nature, Science, Perl, Conarro, Tsugu, LExO, causality, "
-        "Actor–network theory, exponential organizations, problem tree, solution tree, problem solution tree):\n"
+        "Resumé:\n"
     )
 
     cmd = [
@@ -179,24 +127,10 @@ def summarize_with_llama(transcript: str) -> str:
         "-p", prompt,
         "-n", "512",
         "-c", "4096",
-        "-t", "4",
-        "-b", "512",
-        "--temp", "0.7",
-        "--top-k", "40",
-        "--top-p", "0.95",
-        "--repeat-penalty", "1.1",
-        "--single-turn",
-        "--simple-io",          # suppresses banners and metadata
-        "--no-display-prompt"   # suppresses prompt echo
+        "--single-turn"
     ]
 
-    print("LLAMA COMMAND:", " ".join(cmd))
-
-    try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-    except subprocess.TimeoutExpired:
-        raise RuntimeError("Llama summarization timed out after 10 minutes")
-
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     if result.returncode != 0:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
@@ -207,11 +141,7 @@ def summarize_with_llama(transcript: str) -> str:
 def submit_results(row: int, transcript: str, summary: str):
     """Send transcript and summary back to the App Script backend."""
     url = f"{BASE_URL}?key={API_SECRET}"
-    payload = {
-        "row": row,
-        "transcript": transcript,
-        "summary": summary
-    }
+    payload = {"row": row, "transcript": transcript, "summary": summary}
     print(f"Submitting results for row {row}")
     r = requests.post(url, json=payload, timeout=120)
     r.raise_for_status()
@@ -222,7 +152,6 @@ def process_all_jobs():
     while True:
         print("Requesting next job...")
         job = get_next_job()
-
         if not job:
             print("No more jobs. Exiting.")
             break
