@@ -78,10 +78,8 @@ def download_audio(drive_url: str, row: int) -> Path:
     return wav_path
 
 def transcribe_with_whisper(audio_path: Path) -> str:
-    """Run whisper.cpp to transcribe the audio file into text."""
     print(f"Transcribing {audio_path.name} with whisper.cpp")
 
-    # Initial prompt to bias Whisper toward preserving English terms
     initial_prompt = (
         "Behold engelske artikelnavne, bogtitler, projektnavne og tekniske termer uændret. "
         "Eksempler: Bayesian Inference, Deep Learning, Nature, Science, Perl, Conarro, Tsugu, "
@@ -93,7 +91,7 @@ def transcribe_with_whisper(audio_path: Path) -> str:
         str(WHISPER_BIN),
         "-m", str(WHISPER_MODEL),
         str(audio_path.resolve()),
-        "-l", "da",   # specify Danish language
+        "-l", "da",
         "-otxt",
         "--initial-prompt", initial_prompt
     ]
@@ -102,14 +100,15 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     if result.returncode != 0:
         raise RuntimeError(f"Whisper failed: {result.stderr}")
 
-    # Whisper writes e.g. meeting_2.txt (not meeting_2.wav.txt)
-    txt_path = audio_path.with_suffix(".txt")
+    # Whisper writes meeting_2.wav.txt
+    txt_path = Path(str(audio_path) + ".txt")
 
-    if not txt_path.exists():
-        raise RuntimeError(f"Transcript file not found: {txt_path}")
+    if not txt_path.exists() or txt_path.stat().st_size == 0:
+        print("Whisper stdout preview:", result.stdout[:300])
+        print("Whisper stderr preview:", result.stderr[:300])
+        raise RuntimeError(f"Transcript file missing or empty: {txt_path}")
 
     transcript = txt_path.read_text(encoding="utf-8", errors="ignore").strip()
-
     print("Transcript preview:", transcript[:200], "...")
     print("Transcript length:", len(transcript))
     return transcript
