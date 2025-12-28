@@ -121,7 +121,6 @@ def summarize_with_llama(transcript: str, row: int) -> str:
             "--simple-io",
             "--no-display-prompt",
             "--no-show-timings",
-            "--no-conversation",
             "--log-disable",
             "--log-colors", "off"
         ],
