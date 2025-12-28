@@ -98,9 +98,8 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     print("Transcript length:", len(transcript))
     return transcript
 
-
 def summarize_with_llama(transcript: str, row: int) -> str:
-    """Run llama.cpp to generate a Danish summary of the transcript (file output only)."""
+    """Run llama.cpp to generate a Danish summary of the transcript, capturing clean stdout only."""
     print("Summarizing transcript with llama.cpp")
 
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
@@ -111,37 +110,36 @@ def summarize_with_llama(transcript: str, row: int) -> str:
         f"Transskription:\n{truncated}\n\nResumé:\n"
     )
 
-    output_path = DOWNLOAD_DIR / f"meeting_{row}_summary.txt"
-
-    # Redirect stdout to file
-    with open(output_path, "w", encoding="utf-8") as f:
-        result = subprocess.run(
-            [
-                str(LLAMA_BIN),
-                "-m", str(LLAMA_MODEL),
-                "-p", prompt,
-                "-n", "512",
-                "-c", "4096",
-                "--single-turn",
-                "--simple-io",
-                "--no-display-prompt"
-            ],
-            stdout=f,
-            stderr=subprocess.PIPE,
-            text=True,
-            timeout=600
-        )
+    result = subprocess.run(
+        [
+            str(LLAMA_BIN),
+            "-m", str(LLAMA_MODEL),
+            "-p", prompt,
+            "-n", "512",
+            "-c", "4096",
+            "--single-turn",
+            "--simple-io",
+            "--no-display-prompt",
+            "--no-show-timings",
+            "--no-conversation",
+            "--log-disable",
+            "--log-colors", "off"
+        ],
+        capture_output=True,
+        text=True,
+        timeout=600
+    )
 
     if result.returncode != 0:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
-    if not output_path.exists() or output_path.stat().st_size == 0:
-        raise RuntimeError(f"Summary file missing or empty: {output_path}")
+    summary = result.stdout.strip()
+    if not summary:
+        raise RuntimeError("Llama produced no summary output")
 
-    # Return the clean file contents
-    summary = output_path.read_text(encoding="utf-8", errors="ignore").strip()
     print("Summary preview:", summary[:200], "...")
     return summary
+
 
 
 def submit_results(row: int, transcript: str, summary: str):
