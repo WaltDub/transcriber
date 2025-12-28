@@ -104,21 +104,33 @@ def summarize_with_llama(transcript: str, row: int) -> str:
     print("Summarizing transcript with llama.cpp")
 
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
-    prompt = f"Lav et kort og klart mødereferat på dansk.\n\nTransskription:\n{truncated}\n\nResumé:\n"
+    prompt = (
+        "Du er en assistent, der skriver klare mødereferater.\n\n"
+        "Lav et kort og klart resumé på dansk.\n\n"
+        "Bevar engelske navne, titler på personer, bøger og artikler samt tekniske termer uændret.\n\n"
+        f"Transskription:\n{truncated}\n\nResumé:\n"
+    )
 
     output_path = DOWNLOAD_DIR / f"meeting_{row}_summary.txt"
 
-    cmd = [
-        str(LLAMA_BIN),
-        "-m", str(LLAMA_MODEL),
-        "-p", prompt,
-        "-n", "512",
-        "-c", "4096",
-        "--single-turn",
-        "-of", str(output_path)
-    ]
+    with open(output_path, "w", encoding="utf-8") as f:
+        result = subprocess.run(
+            [
+                str(LLAMA_BIN),
+                "-m", str(LLAMA_MODEL),
+                "-p", prompt,
+                "-n", "512",
+                "-c", "4096",
+                "--single-turn",
+                "--simple-io",
+                "--no-display-prompt"
+            ],
+            stdout=f,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=600
+        )
 
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
     if result.returncode != 0:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
@@ -166,4 +178,3 @@ def process_all_jobs():
 
 if __name__ == "__main__":
     process_all_jobs()
-
