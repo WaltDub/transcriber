@@ -113,6 +113,7 @@ def summarize_with_llama(transcript: str, row: int) -> str:
 
     output_path = DOWNLOAD_DIR / f"meeting_{row}_summary.txt"
 
+    # Redirect stdout to file
     with open(output_path, "w", encoding="utf-8") as f:
         result = subprocess.run(
             [
@@ -137,6 +138,7 @@ def summarize_with_llama(transcript: str, row: int) -> str:
     if not output_path.exists() or output_path.stat().st_size == 0:
         raise RuntimeError(f"Summary file missing or empty: {output_path}")
 
+    # Return the clean file contents
     summary = output_path.read_text(encoding="utf-8", errors="ignore").strip()
     print("Summary preview:", summary[:200], "...")
     return summary
