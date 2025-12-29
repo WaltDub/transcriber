@@ -25,7 +25,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: whisper.cpp/build
-          key: whisper-build-${{ hashFiles('whisper.cpp/**') }}
+          key: whisper-build-v1-${{ hashFiles('whisper.cpp/**') }}
 
       # Cache Llama build
       - name: Cache llama.cpp build
@@ -33,15 +33,15 @@ jobs:
         uses: actions/cache@v3
         with:
           path: llama.cpp/build
-          key: llama-build-${{ hashFiles('llama.cpp/**') }}
+          key: llama-build-v1-${{ hashFiles('llama.cpp/**') }}
 
-      # Cache models (both Whisper + LLM)
+      # Cache models (Whisper + LLM)
       - name: Cache models
         id: cache-models
         uses: actions/cache@v3
         with:
           path: models
-          key: models-cache-v3   # bumped to force fresh download
+          key: models-cache-v4   # bump this when you change model files
 
       # Install system dependencies
       - name: Install dependencies
@@ -87,6 +87,9 @@ jobs:
           wget -O models/ggml-medium.bin \
             https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin
 
+      - name: Verify Whisper model
+        run: ls -lh models && file models/ggml-medium.bin
+
       # Download LLM model only if cache missed
       - name: Download LLM model
         if: steps.cache-models.outputs.cache-hit != 'true'
@@ -103,7 +106,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: pip-cache-v3
+          key: pip-cache-v1
 
       - name: Install Python packages
         run: pip3 install requests gdown
