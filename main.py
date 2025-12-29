@@ -130,19 +130,19 @@ def clean_llama_output(raw: str) -> str:
 
 
 def summarize_with_llama(transcript: str, row: int) -> str:
-    """Run llama.cpp to generate a Danish narrative summary grouped by themes, forbidding invention."""
+    """Run llama.cpp to generate an English narrative summary grouped by themes, forbidding invention."""
     print("Summarizing transcript with llama.cpp")
 
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
     prompt = (
-        "Du er en assistent, der skriver korte referater af diskussioner.\n\n"
-        "Opgave:\n"
-        "- Skriv et kort narrativt resumé på dansk.\n"
-        "- Gruppér indholdet efter temaer (fx emner, ideer, problemer).\n"
-        "- Brug kun oplysninger fra transskriptionen.\n"
-        "- Tilføj ikke nye eksempler, retter eller detaljer, der ikke findes i teksten.\n"
-        "- Bevar engelske navne, titler, bøger, artikler og tekniske termer uændret.\n\n"
-        f"Transskription:\n{truncated}\n\nResumé (narrativ, grupperet efter temaer):\n"
+        "You are an assistant that writes clear discussion summaries.\n\n"
+        "Task:\n"
+        "- Write a narrative summary in English.\n"
+        "- Group content by themes (topics, ideas, problems).\n"
+        "- Use only information from the transcript.\n"
+        "- Do not invent new details or examples.\n"
+        "- Keep proper names and technical terms exactly as they appear.\n\n"
+        f"Transcript:\n{truncated}\n\nSummary (in English):\n"
     )
 
     result = subprocess.run(
@@ -173,7 +173,6 @@ def summarize_with_llama(transcript: str, row: int) -> str:
 
     print("Summary preview:", cleaned[:200], "...")
     return cleaned
-
 
 
 def submit_results(row: int, transcript: str, summary: str):
