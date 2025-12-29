@@ -31,6 +31,7 @@ def get_next_job():
     r = requests.get(url, timeout=60)
     r.raise_for_status()
     job = r.json()
+    print("Fetched job payload:", job)   # <-- add this
     return job if job and "row" in job else None
 
 
