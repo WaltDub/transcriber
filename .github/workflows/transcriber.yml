@@ -84,8 +84,8 @@ jobs:
         if: steps.cache-models.outputs.cache-hit != 'true'
         run: |
           mkdir -p models
-          wget -O models/ggml-base.bin \
-            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin
+          wget -O models/ggml-medium.bin \
+            https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin
 
       # Download LLM model only if cache missed
       - name: Download LLM model
@@ -103,7 +103,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ~/.cache/pip
-          key: pip-cache-v2
+          key: pip-cache-v3
 
       - name: Install Python packages
         run: pip3 install requests gdown
