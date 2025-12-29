@@ -17,7 +17,7 @@ WHISPER_BIN = (BASE_DIR / "whisper.cpp/build/bin/whisper-cli").resolve()
 LLAMA_BIN = (BASE_DIR / "llama.cpp/build/bin/llama-cli").resolve()
 
 # Paths to model files
-WHISPER_MODEL = (BASE_DIR / "models/ggml-base.bin").resolve()
+WHISPER_MODEL = (BASE_DIR / "models/ggml-medium.bin").resolve()
 LLAMA_MODEL = (BASE_DIR / "models/mistral-7b-instruct-v0.2.Q4_K_M.gguf").resolve()
 
 # Directory for temporary audio downloads
