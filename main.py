@@ -98,8 +98,38 @@ def transcribe_with_whisper(audio_path: Path) -> str:
     print("Transcript length:", len(transcript))
     return transcript
 
+
+def clean_llama_output(raw: str) -> str:
+    """
+    Clean llama-cli output so only the summary text remains.
+    - Remove banners and metadata
+    - Keep only the text after the last 'Resumé:' (or '(truncated)' fallback)
+    - Remove trailing 'Exiting...'
+    """
+    text = raw
+
+    # Cut before 'Exiting...'
+    if "Exiting..." in text:
+        text = text.split("Exiting...", 1)[0]
+
+    # Prefer the last 'Resumé:' marker
+    if "Resumé:" in text:
+        idx = text.rfind("Resumé:")
+        text = text[idx + len("Resumé:"):]
+    elif "(truncated)" in text:
+        idx = text.rfind("(truncated)")
+        text = text[idx + len("(truncated)"):]
+    else:
+        # fallback: drop everything before the first 'Transskription:' if present
+        if "Transskription:" in text:
+            idx = text.find("Transskription:")
+            text = text[idx + len("Transskription:"):]
+
+    return text.strip()
+
+
 def summarize_with_llama(transcript: str, row: int) -> str:
-    """Run llama.cpp to generate a Danish summary of the transcript, capturing clean stdout only."""
+    """Run llama.cpp to generate a Danish summary of the transcript, then clean the output."""
     print("Summarizing transcript with llama.cpp")
 
     truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
@@ -132,13 +162,12 @@ def summarize_with_llama(transcript: str, row: int) -> str:
     if result.returncode != 0:
         raise RuntimeError(f"Llama failed: {result.stderr}")
 
-    summary = result.stdout.strip()
-    if not summary:
+    cleaned = clean_llama_output(result.stdout)
+    if not cleaned:
         raise RuntimeError("Llama produced no summary output")
 
-    print("Summary preview:", summary[:200], "...")
-    return summary
-
+    print("Summary preview:", cleaned[:200], "...")
+    return cleaned
 
 
 def submit_results(row: int, transcript: str, summary: str):
