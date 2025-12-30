@@ -111,7 +111,7 @@ def clean_llama_output(raw: str) -> str:
 
 def summarize_with_llama(transcript: str, row: int) -> str:
     print("Summarizing transcript with llama.cpp")
-    truncated = shorten(transcript, width=6000, placeholder="... [truncated]")
+    truncated = shorten(transcript, width=12000, placeholder="... [truncated]")
     prompt = (
         "You are an assistant that writes clear discussion summaries.\n\n"
         "Task:\n"
