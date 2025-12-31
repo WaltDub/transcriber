@@ -163,7 +163,7 @@ def submit_results(row: int, transcript: str, summary: str):
     url = f"{BASE_URL}?key={API_SECRET}"
     payload = {"row": row, "transcript": transcript, "summary": summary}
     print(f"Submitting results for row {row}")
-    r = requests.post(url, json=payload, timeout=120)
+    r = requests.post(url, data=json.dumps(payload), headers={"Content-Type": "application/json"}, timeout=120)
     r.raise_for_status()
 
 
